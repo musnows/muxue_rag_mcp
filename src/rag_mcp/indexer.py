@@ -39,11 +39,8 @@ class Indexer:
         files_to_process = []
         
         for root, dirs, files in os.walk(self.target_dir):
-            # Skip .muxue_rag
-            if ".muxue_rag" in dirs:
-                dirs.remove(".muxue_rag")
-            if ".git" in dirs:
-                dirs.remove(".git")
+            # Skip hidden directories
+            dirs[:] = [d for d in dirs if not d.startswith('.')]
                 
             for file in files:
                 file_path = os.path.join(root, file)
@@ -54,7 +51,8 @@ class Indexer:
                 mtime = os.path.getmtime(file_path)
                 
                 # Check if needs update
-                if file_path not in existing_files or existing_files[file_path] != mtime:
+                # Use a small epsilon for float comparison
+                if file_path not in existing_files or abs(existing_files[file_path] - mtime) > 1e-6:
                     files_to_process.append(file_path)
 
         # Identify deleted files
